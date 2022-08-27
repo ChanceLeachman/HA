@@ -21,6 +21,10 @@ MQTT_PORT = os.getenv('MQTT_PORT', 1883)
 MQTT_ID = os.getenv('MQTT_ID', 'lirc-watcher')
 MQTT_PREFIX = os.getenv('MQTT_PREFIX', 'lirc')
 
+MQTT_POWER_TOPIC = "ac/power/set"
+MQTT_MODE_TOPIC = "ac/mode/set"
+MQTT_TEMP_TOPIC = "ac/temperature/set"
+
 MQTT_SEND_TOPIC = '%s/send/#' % MQTT_PREFIX
 MQTT_STATUS_TOPIC = '%s/alive' % MQTT_PREFIX
 MQTT_PAYLOAD_ONLINE = '1'
@@ -36,10 +40,13 @@ def on_mqtt_connect(mqtt, userdata, flags, rc):
         mqtt.publish(MQTT_STATUS_TOPIC, payload=MQTT_PAYLOAD_ONLINE,
                      qos=MQTT_QOS, retain=True)
         mqtt.subscribe(MQTT_SEND_TOPIC)
+        mqtt.subscribe(MQTT_POWER_TOPIC)
+        mqtt.subscribe(MQTT_MODE_TOPIC)
+        mqtt.subscribe(MQTT_TEMP_TOPIC)
     else:
         print('MQTT connect failed:', rc)
 
-def on_mqtt_message(client, userdata, msg):
+def on_mqtt_message_old(client, userdata, msg):
     try:
         (remote, key) = str(msg.topic).split("/")[-2:]
         try:
@@ -47,6 +54,30 @@ def on_mqtt_message(client, userdata, msg):
         except:
             repeat = 1
         command = "SEND_ONCE %s %s %d\n" % (remote, key, repeat)
+        print(command)
+        sock.sendall(command.encode("utf-8"))
+    except:
+        print(str(msg.topic))
+
+remote = 'kuhl'
+mode = 'cool'
+temp = '60'
+
+def on_mqtt_message(client, userdata, msg):
+    try:
+        if msg.topic == MQTT_SEND_TOPIC:
+            on_mqtt_message_old(client, userdata, msg)
+            return
+        elif msg.topic == MQTT_MODE_TOPIC:
+            if (msg.payload == 'off'):
+                command = f"SEND_ONCE {remote} off"
+            else:
+                mode = msg.payload
+                command = f"SEND_ONCE {remote} {msg.payload}_{temp}"
+        elif msg.topic == MQTT_TEMP_TOPIC:
+            temp = msg.payload
+            command = f"SEND_ONCE {remote} {mode}_{msg.payload}"
+        
         print(command)
         sock.sendall(command.encode("utf-8"))
     except:
