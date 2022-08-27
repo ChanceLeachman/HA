@@ -56,8 +56,10 @@ services:
 
   lirc-watcher:
     container_name: lirc-watcher
+    build:
+      context: ./data-lirc-watcher
+      dockerfile: Dockerfile
     restart: always
-    image: pilotak/lirc-watcher
     environment:
       - MQTT_BROKER=192.168.0.224
       - MQTT_USER=admin

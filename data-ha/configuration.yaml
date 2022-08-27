@@ -22,29 +22,19 @@ mqtt:
       command_topic: "lirc/send/kuhl/off"
       unique_id: kuhl_off
   climate:
-    - name: Study
+    - name: AC
       modes:
         - "off"
         - "cool"
+        - "heat"
         - "fan_only"
-      swing_modes:
-        - "on"
-        - "off"
-      fan_modes:
-        - "high"
-        - "medium"
-        - "low"
-      preset_modes:
-        - "eco"
-        - "sleep"
-        - "activity"
-      power_command_topic: "study/ac/power/set"
-      preset_mode_command_topic: "study/ac/preset_mode/set"
-      mode_command_topic: "study/ac/mode/set"
-      temperature_command_topic: "study/ac/temperature/set"
-      fan_mode_command_topic: "study/ac/fan/set"
-      swing_mode_command_topic: "study/ac/swing/set"
+      power_command_topic: "ac/power/set"
+      mode_command_topic: "ac/mode/set"
+      temperature_command_topic: "ac/temperature/set"
+      current_temperature_topic: "ac/temperature/set"
       precision: 1.0
+      min_temp: 60
+      max_temp: 90
 
 homeassistant:
   auth_providers:
