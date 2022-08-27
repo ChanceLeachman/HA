@@ -58,30 +58,31 @@ def on_mqtt_message_old(client, userdata, msg):
         sock.sendall(command.encode("utf-8"))
     except:
         print(str(msg.topic))
-
-remote = 'kuhl'
-mode = 'cool'
+        
 temp = '60'
+mode = 'off'
 
 def on_mqtt_message(client, userdata, msg):
-    try:
-        if msg.topic == MQTT_SEND_TOPIC:
-            on_mqtt_message_old(client, userdata, msg)
-            return
-        elif msg.topic == MQTT_MODE_TOPIC:
-            if (msg.payload == 'off'):
-                command = f"SEND_ONCE {remote} off"
-            else:
-                mode = msg.payload
-                command = f"SEND_ONCE {remote} {msg.payload}_{temp}"
-        elif msg.topic == MQTT_TEMP_TOPIC:
-            temp = msg.payload
-            command = f"SEND_ONCE {remote} {mode}_{msg.payload}"
-        
+    global temp
+    global mode
+    payload = msg.payload.decode('UTF-8')
+    if msg.topic == MQTT_SEND_TOPIC:
+        on_mqtt_message_old(client, userdata, msg)
+    elif msg.topic == MQTT_MODE_TOPIC:
+        if (payload == 'off'):
+            command = f"SEND_ONCE kuhl off 1\n"
+        elif (payload == 'fan_only'):
+            command = f"SEND_ONCE kuhl fan 1\n"
+        else:
+            mode = payload
+            command = f"SEND_ONCE kuhl {payload}_{temp} 1\n"
         print(command)
         sock.sendall(command.encode("utf-8"))
-    except:
-        print(str(msg.topic))
+    elif msg.topic == MQTT_TEMP_TOPIC:
+        temp = payload[0:len(payload)-2]
+        command = f"SEND_ONCE kuhl {mode}_{payload[0:len(payload)-2]} 1\n"
+        print(command)
+        sock.sendall(command.encode("utf-8"))
 
 prev_data = None
 timer = None

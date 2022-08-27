@@ -66,6 +66,7 @@ services:
       - MQTT_PASSWORD=my-secret-pw 
     volumes:
       - lircd:/var/run/lirc
+      - ./data-lirc-watcher/:/app
     depends_on:
       - mosquitto
       - lirc
