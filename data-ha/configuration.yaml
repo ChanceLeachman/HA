@@ -1,0 +1,56 @@
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+# Text to speech
+tts:
+  - platform: google_translate
+
+mqtt:
+  discovery: true
+  broker: 192.168.0.224
+  birth_message:
+    topic: 'hass/status'
+    payload: 'online'
+  will_message:
+    topic: 'hass/status'
+    payload: 'offline'
+  
+  button:
+    - name: 'On'
+      command_topic: "lirc/send/kuhl/on"
+      unique_id: kuhl_on
+    - name: 'Off'
+      command_topic: "lirc/send/kuhl/off"
+      unique_id: kuhl_off
+  climate:
+    - name: Study
+      modes:
+        - "off"
+        - "cool"
+        - "fan_only"
+      swing_modes:
+        - "on"
+        - "off"
+      fan_modes:
+        - "high"
+        - "medium"
+        - "low"
+      preset_modes:
+        - "eco"
+        - "sleep"
+        - "activity"
+      power_command_topic: "study/ac/power/set"
+      preset_mode_command_topic: "study/ac/preset_mode/set"
+      mode_command_topic: "study/ac/mode/set"
+      temperature_command_topic: "study/ac/temperature/set"
+      fan_mode_command_topic: "study/ac/fan/set"
+      swing_mode_command_topic: "study/ac/swing/set"
+      precision: 1.0
+
+homeassistant:
+  auth_providers:
+    - type: trusted_networks
+      trusted_networks:
+        - 192.168.0.0/24
+          #- fd00::/8
+      allow_bypass_login: true
+          #- type: homeassistant

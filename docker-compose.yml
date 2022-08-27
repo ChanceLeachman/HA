@@ -1,0 +1,89 @@
+version: '3'
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    volumes:
+      - ./data-mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./data-mosquitto/data:/mosquitto/data
+      - ./data-mosquitto/log:/mosquitto/log
+    network_mode: host
+
+  postgres:
+    container_name: postgres-ha
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - ./data-postgres/:/var/lib/postgresql/data/
+    network_mode: host
+    environment:
+      - POSTGRES_DB=ha
+      - POSTGRES_USER=postgres-ha
+      - POSTGRES_PASSWORD=chance
+
+  zwavejs2mqtt:
+    container_name: zwavejs2mqtt
+    image: zwavejs/zwavejs2mqtt:latest
+    restart: unless-stopped
+    volumes:
+      - ./data-zwavejs2mqtt:/usr/src/app/store
+    depends_on:
+      - mosquitto
+    network_mode: host
+    devices:
+      - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_C1301FFF-if00-port0:/dev/ttyACM0
+    tty: true
+    stop_signal: SIGINT
+    environment:
+      - TZ=America/Los_Angeles
+
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    restart: unless-stopped
+    volumes:
+      - ./data-ha:/config
+      - ./data-postgres/:/var/lib/postgresql/data/
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - mosquitto
+      - postgres
+    network_mode: host
+    privileged: true
+    devices:
+      - /dev/serial/by-id/usb-Silicon_Labs_HubZ_Smart_Home_Controller_C1301FFF-if01-port0:/dev/ttyACM0
+
+  lirc-watcher:
+    container_name: lirc-watcher
+    restart: always
+    image: pilotak/lirc-watcher
+    environment:
+      - MQTT_BROKER=192.168.0.224
+      - MQTT_USER=admin
+      - MQTT_PASSWORD=my-secret-pw 
+    volumes:
+      - lircd:/var/run/lirc
+    depends_on:
+      - mosquitto
+      - lirc
+  
+  lirc:
+    container_name: lirc
+    build:
+      context: ./data-lirc
+      dockerfile: Dockerfile
+    devices:
+      - /dev/lirc0:/dev/lirc0:rw
+    volumes:
+      - ./data-lirc/lircd.conf.d/:/etc/lirc/lircd.conf.d/
+      - ./data-lirc/lirc_options.conf:/etc/lirc/lirc_options.conf
+      - lircd:/var/run/lirc
+    command: lircd -n
+    restart: always
+    depends_on:
+      - mosquitto
+
+volumes:
+  lircd:
+

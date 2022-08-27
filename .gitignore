@@ -1,0 +1,10 @@
+data-ha/*
+!data-ha/configuration.yaml
+data-mosquitto/*
+!data-mosquitto/.gitkeep
+data-zigbee2mqtt/*
+!data-zigbee2mqtt/.gitkeep
+data-zwavejs2mqtt/*
+!data-zwavejs2mqtt/.gitkeep
+data-postgres/*
+!data-postgres/.gitkeep
